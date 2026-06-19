@@ -1,7 +1,8 @@
-
 import 'package:chatingfatingapp/components/rounded_button.dart';
 import 'package:chatingfatingapp/constants.dart';
+import 'package:chatingfatingapp/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegistrationScreen extends StatefulWidget {
   static const String id = 'regScreen';
@@ -10,6 +11,9 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  final _auth = FirebaseAuth.instance;
+  String email = '';
+  String password = '';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,31 +31,57 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: Image.asset('images/logo.png'),
               ),
             ),
-            SizedBox(
-              height: 48.0,
-            ),
+            SizedBox(height: 48.0),
             TextField(
+              // For Email key board
+              keyboardType: TextInputType.emailAddress,
+              textAlign: TextAlign.center,
               onChanged: (value) {
                 //Do something with the user input.
+                email = value.trim();
               },
-              decoration:kTextFieldDecoration.copyWith( hintText: "Enter your Email"),
+              decoration: kTextFieldDecoration.copyWith(
+                hintText: "Enter your Email",
+              ),
             ),
-            SizedBox(
-              height: 8.0,
-            ),
+            SizedBox(height: 8.0),
             TextField(
+              obscureText: true,
+              textAlign: TextAlign.center,
               onChanged: (value) {
                 //Do something with the user input.
+                password = value.trim();
               },
-              decoration: kTextFieldDecoration.copyWith(hintText: 'Enter your password'),
+              decoration: kTextFieldDecoration.copyWith(
+                hintText: 'Enter your password',
+              ),
             ),
-            SizedBox(
-              height: 24.0,
+            SizedBox(height: 24.0),
+            RoundedButton(
+              color: Colors.blueAccent,
+              buttonTitle: 'Register',
+              onTap: () async {
+                if (email.isEmpty || password.isEmpty) {
+                  print("Email password empty");
+                  return;
+                }
+                //Implement registration functionality.
+                try {
+                  final newUser = await _auth.createUserWithEmailAndPassword(
+                    email: email,
+                    password: password,
+                  );
+                  if (!mounted) {
+                    return;
+                  }
+                  if (newUser.user != null) {
+                    Navigator.pushNamed(context, ChatScreen.id);
+                  }
+                } catch (e) {
+                  print(e);
+                }
+              },
             ),
-          RoundedButton(color: Colors.blueAccent, buttonTitle: 'Register', onTap: () {
-                    //Implement registration functionality.
-                  },),
-
           ],
         ),
       ),
