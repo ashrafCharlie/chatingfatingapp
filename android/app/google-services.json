@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "576983385431",
+    "project_id": "chattingfatingapp",
+    "storage_bucket": "chattingfatingapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576983385431:android:8157e00ad7d219e328ea12",
+        "android_client_info": {
+          "package_name": "com.charlie.chatingfating"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUAF08WXnwUWfLnWheOCxdzanEwW1G1cw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
