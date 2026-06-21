@@ -16,6 +16,14 @@ class _ChatScreenState extends State<ChatScreen> {
   User? loggedinUser;
   String testMag = '';
 
+  void massegesStrem() async {
+    await for (var snapshot in _firestore.collection('message').snapshots()) {
+      for (var msg in snapshot.docs) {
+        print(msg.data());
+      }
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -51,9 +59,9 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: Icon(Icons.logout),
             onPressed: () async {
               await _auth.signOut();
-           
+
               Navigator.pop(context);
-              //Implement logout functionality
+              // Implement logout functionality
             },
           ),
         ],
@@ -65,6 +73,33 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            Expanded(
+              child: StreamBuilder(
+                stream: _firestore.collection('message').snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.cyanAccent,
+                      ),
+                    );
+                  }
+                  final messages = snapshot.data!.docs;
+                  List<Widget> messageWidgets = [];
+                  for (var message in messages) {
+                    final messageList = message.data() as Map<String, dynamic>;
+                    final messageText = messageList['text'];
+                    final messageSender = messageList['sender'];
+                    final messageWidget = Text(
+                      "$messageText from $messageSender",
+                      style: TextStyle(color: Colors.white),
+                    );
+                    messageWidgets.add(messageWidget);
+                  }
+                  return Column(children:messageWidgets);
+                },
+              ),
+            ),
             Container(
               decoration: kMessageContainerDecoration,
               child: Row(
@@ -94,7 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                       try {
                         _firestore.collection('message').add({
-                          'test': testMag,
+                          'text': testMag,
                           'sender': loggedinUser!.email,
                         });
                       } catch (e) {
