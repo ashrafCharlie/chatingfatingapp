@@ -1,8 +1,10 @@
 import 'package:chatingfatingapp/constants.dart';
+import 'package:chatingfatingapp/screens/welcome_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 final _firestore = FirebaseFirestore.instance;
+User? loggedinUser;
 class ChatScreen extends StatefulWidget {
   static const String id = 'charScreen';
   @override
@@ -13,16 +15,9 @@ class _ChatScreenState extends State<ChatScreen> {
   TextEditingController msgController = TextEditingController();
  
   final _auth = FirebaseAuth.instance;
-  User? loggedinUser;
+
   String testMag = '';
 
-  void massegesStrem() async {
-    await for (var snapshot in _firestore.collection('message').snapshots()) {
-      for (var msg in snapshot.docs) {
-        print(msg.data());
-      }
-    }
-  }
 
   @override
   void initState() {
@@ -52,15 +47,16 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       appBar: AppBar(
         leading: null,
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: () async {
-              await _auth.signOut();
-
-              Navigator.pop(context);
+            onPressed: ()  {
+               _auth.signOut();
+            if(!mounted)return;
+            Navigator.pop(context);
               // Implement logout functionality
             },
           ),
@@ -107,6 +103,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         _firestore.collection('message').add({
                           'text': testMag,
                           'sender': loggedinUser!.email,
+                          'timestamp' : FieldValue.serverTimestamp(),
                         });
                       } catch (e) {
                         print(e);
@@ -133,7 +130,7 @@ class StreamMessages extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-                stream: _firestore.collection('message').snapshots(),
+                stream: _firestore.collection('message').orderBy('timestamp',descending: true).snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -148,10 +145,17 @@ class StreamMessages extends StatelessWidget {
                     final messageList = message.data() as Map<String, dynamic>;
                     final messageText = messageList['text'];
                     final messageSender = messageList['sender'];
-                    final messageWidget = MessageBubble(text: messageText, sender: messageSender);
+                    final currentUser = loggedinUser!.email ;
+
+                    final messageWidget = MessageBubble(
+                      text: messageText,
+                      sender: messageSender,
+                      isMe: messageSender == currentUser,
+                    );
                     messageWidgets.add(messageWidget);
                   }
                   return ListView(
+                    reverse: true,
                     padding: EdgeInsets.symmetric(
                       vertical: 20.0,
                       horizontal: 12.0,
@@ -171,29 +175,40 @@ class StreamMessages extends StatelessWidget {
 
 
 class MessageBubble extends StatelessWidget {
-  MessageBubble({required this.text, required this.sender});
+  MessageBubble({required this.text, required this.sender, required this.isMe});
   final String  text;
   final String  sender;
+  final bool isMe;
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment:isMe? CrossAxisAlignment.end:CrossAxisAlignment.start,
         children: [
               Text(sender, style: TextStyle(
                 fontSize: 10.0
             ),),
           SizedBox(height: 5.0,),
           Material(
-            borderRadius: BorderRadius.circular(30.0),
+            borderRadius:isMe?BorderRadius.only(
+                topLeft: Radius.circular(30.0),
+                bottomLeft: Radius.circular(30.0),
+                bottomRight: Radius.circular(30.0),
+            ):BorderRadius.only(
+              topRight: Radius.circular(30.0),
+              bottomLeft: Radius.circular(30.0),
+              bottomRight: Radius.circular(30.0),
+            ),
             elevation: 5.0,
-            color: const Color.fromARGB(255, 50, 145, 204),
+            color: isMe? Colors.lightBlueAccent : Colors.white,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
               child: Text(
                     text,
-                    style: TextStyle(color: const Color.fromARGB(255, 7, 7, 7), fontSize: 15.0),
+                    style: TextStyle(
+                        color:isMe? Colors.white: Colors.black54,
+                        fontSize: 15.0),
                   ),
              
             
